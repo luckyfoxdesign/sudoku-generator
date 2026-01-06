@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="ru">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Sudoku Generator Test</title>
+        <style>
+            body {
+                font-family:
+                    system-ui,
+                    -apple-system,
+                    sans-serif;
+                max-width: 800px;
+                margin: 50px auto;
+                padding: 20px;
+                background: #f5f5f5;
+            }
+            h1 {
+                color: #333;
+            }
+            .grid {
+                display: grid;
+                grid-template-columns: repeat(9, 40px);
+                gap: 1px;
+                background: #000;
+                border: 2px solid #000;
+                margin: 20px 0;
+            }
+            .cell {
+                background: #fff;
+                height: 40px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: 600;
+                color: #333;
+            }
+            button {
+                background: #007bff;
+                color: white;
+                border: none;
+                padding: 10px 20px;
+                border-radius: 5px;
+                cursor: pointer;
+                font-size: 16px;
+            }
+            button:hover {
+                background: #0056b3;
+            }
+            pre {
+                background: #fff;
+                padding: 15px;
+                border-radius: 5px;
+                overflow-x: auto;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Sudoku Generator Test</h1>
+
+        <button onclick="generate()">Генерировать сетку</button>
+
+        <div class="grid" id="grid"></div>
+
+        <h2>JSON вывод:</h2>
+        <pre id="output"></pre>
+
+        <!-- Подключение через dist (после сборки) -->
+        <script src="./dist/index.global.js"></script>
+
+        <script>
+            function generate() {
+                const grid = Sudoku.generateSudokuGrid();
+
+                // Отображение в виде сетки
+                const gridEl = document.getElementById("grid");
+                gridEl.innerHTML = "";
+
+                grid.forEach((row) => {
+                    row.forEach((cell) => {
+                        const cellEl = document.createElement("div");
+                        cellEl.className = "cell";
+                        cellEl.textContent = cell || "";
+                        gridEl.appendChild(cellEl);
+                    });
+                });
+
+                // JSON вывод
+                document.getElementById("output").textContent = JSON.stringify(
+                    grid,
+                    null,
+                    2,
+                );
+            }
+
+            // Генерация при загрузке
+            generate();
+        </script>
+    </body>
+</html>

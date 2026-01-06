@@ -1,0 +1,51 @@
+{
+  "name": "@luckyfoxdesign/sudoku-generator",
+  "version": "1.0.0",
+  "description": "A lightweight Sudoku puzzle generator that creates randomized 9×9 grids using a backtracking algorithm. Generates complete, valid Sudoku boards suitable for games and puzzle applications.",
+  "keywords": [
+    "sudoku",
+    "puzzle",
+    "generator",
+    "game",
+    "algorithm",
+    "backtracking",
+    "grid",
+    "board"
+  ],
+  "homepage": "https://github.com/luckyfoxdesign/sudoku-generator#readme",
+  "bugs": {
+    "url": "https://github.com/luckyfoxdesign/sudoku-generator/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/luckyfoxdesign/sudoku-generator.git"
+  },
+  "license": "MIT",
+  "author": "Lucky Fox Design <luckyfoxinthebox@gmail.com> (https://luckyfox.design/)",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "browser": "./dist/index.global.js",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "node build.mjs",
+    "prepublishOnly": "npm run build",
+    "test": "node --test test/**/*.test.js"
+  },
+  "devDependencies": {
+    "esbuild": "^0.27.2"
+  },
+  "funding": {
+    "type": "individual",
+    "url": "https://luckyfox.design/"
+  }
+}

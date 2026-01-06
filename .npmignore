@@ -1,0 +1,22 @@
+# Dev files
+build.mjs
+compose.yml
+test.html
+GITHUB_ACTIONS_SETUP.md
+*.test.js
+
+# Config
+.gitignore
+.dockerignore
+package-lock.json
+
+# IDE
+.vscode/
+.idea/
+
+# Git
+.git/
+.github/
+
+# Tests
+test/

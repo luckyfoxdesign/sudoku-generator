@@ -1,0 +1,8 @@
+services:
+  app:
+    image: node:24-bookworm-slim
+    container_name: sudoku-generator_c
+    working_dir: /sudoku-generator
+    volumes:
+      - ./:/sudoku-generator
+    command: "tail -f /dev/null"

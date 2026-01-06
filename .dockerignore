@@ -1,0 +1,17 @@
+node_modules/
+dist/
+.gitignore
+.gitattributes
+.github/
+README.md
+LICENSE
+*.md
+.vscode/
+.idea/
+.DS_Store
+GITHUB_ACTIONS_SETUP.md
+
+# Docker
+Dockerfile
+compose.yml
+.dockerignore
