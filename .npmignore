@@ -8,7 +8,6 @@ GITHUB_ACTIONS_SETUP.md
 # Config
 .gitignore
 .dockerignore
-package-lock.json
 
 # IDE
 .vscode/
