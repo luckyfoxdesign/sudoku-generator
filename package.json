@@ -1,6 +1,6 @@
 {
   "name": "@luckyfoxdesign/sudoku-generator",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A lightweight Sudoku puzzle generator that creates randomized 9×9 grids using a backtracking algorithm. Generates complete, valid Sudoku boards suitable for games and puzzle applications.",
   "keywords": [
     "sudoku",
@@ -39,7 +39,7 @@
   "scripts": {
     "build": "node build.mjs",
     "prepublishOnly": "npm run build",
-    "test": "node --test test/**/*.test.js"
+    "test": "node --test"
   },
   "devDependencies": {
     "esbuild": "^0.27.2"
