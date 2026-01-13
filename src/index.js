@@ -1,7 +1,7 @@
 /**
  * @luckyfoxdesign/sudoku-generator
  * Generates complete, valid 9x9 Sudoku grids using backtracking algorithm
- * 
+ *
  * @license MIT
  * @author Lucky Fox Design <luckyfoxinthebox@gmail.com>
  * @see https://github.com/luckyfoxdesign/sudoku-generator
@@ -173,7 +173,7 @@ function selectValue(currentRow, currentCol, gameGrid) {
  * @param {Object[][]} gameGrid - The game grid
  * @returns {boolean} True if value exists in row, false otherwise
  */
-function isInRow(currentValue, currentRow, currentCol, gameGrid) {
+export function isInRow(currentValue, currentRow, currentCol, gameGrid) {
   for (let i = 0; i < currentCol; i++) {
     if (gameGrid[currentRow][i].chosenValue === currentValue) {
       return true;
@@ -191,7 +191,7 @@ function isInRow(currentValue, currentRow, currentCol, gameGrid) {
  * @param {Object[][]} gameGrid - The game grid
  * @returns {boolean} True if value exists in column, false otherwise
  */
-function isInColumn(currentValue, currentRow, currentCol, gameGrid) {
+export function isInColumn(currentValue, currentRow, currentCol, gameGrid) {
   for (let i = 0; i < currentRow; i++) {
     if (gameGrid[i][currentCol].chosenValue === currentValue) {
       return true;
@@ -209,7 +209,7 @@ function isInColumn(currentValue, currentRow, currentCol, gameGrid) {
  * @param {Object[][]} gameGrid - The game grid
  * @returns {boolean} True if value exists in block, false otherwise
  */
-function isInBlock(currentValue, currentRow, currentCol, gameGrid) {
+export function isInBlock(currentValue, currentRow, currentCol, gameGrid) {
   const rows = getBlockRange(currentRow);
   const columns = getBlockRange(currentCol);
 
@@ -240,7 +240,7 @@ function isInBlock(currentValue, currentRow, currentCol, gameGrid) {
  * getBlockRange(4); // [3, 4, 5]
  * getBlockRange(8); // [6, 7, 8]
  */
-function getBlockRange(value) {
+export function getBlockRange(value) {
   if (value >= 0 && value <= 2) {
     return [0, 1, 2];
   } else if (value >= 3 && value <= 5) {

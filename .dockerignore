@@ -9,7 +9,6 @@ LICENSE
 .vscode/
 .idea/
 .DS_Store
-GITHUB_ACTIONS_SETUP.md
 .npmrc
 
 # Docker

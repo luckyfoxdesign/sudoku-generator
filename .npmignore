@@ -2,7 +2,6 @@
 build.mjs
 compose.yml
 test.html
-GITHUB_ACTIONS_SETUP.md
 *.test.js
 
 # Config
