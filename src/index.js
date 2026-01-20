@@ -173,7 +173,7 @@ function selectValue(currentRow, currentCol, gameGrid) {
  * @param {Object[][]} gameGrid - The game grid
  * @returns {boolean} True if value exists in row, false otherwise
  */
-export function isInRow(currentValue, currentRow, currentCol, gameGrid) {
+function isInRow(currentValue, currentRow, currentCol, gameGrid) {
   for (let i = 0; i < currentCol; i++) {
     if (gameGrid[currentRow][i].chosenValue === currentValue) {
       return true;
@@ -191,7 +191,7 @@ export function isInRow(currentValue, currentRow, currentCol, gameGrid) {
  * @param {Object[][]} gameGrid - The game grid
  * @returns {boolean} True if value exists in column, false otherwise
  */
-export function isInColumn(currentValue, currentRow, currentCol, gameGrid) {
+function isInColumn(currentValue, currentRow, currentCol, gameGrid) {
   for (let i = 0; i < currentRow; i++) {
     if (gameGrid[i][currentCol].chosenValue === currentValue) {
       return true;
@@ -209,7 +209,7 @@ export function isInColumn(currentValue, currentRow, currentCol, gameGrid) {
  * @param {Object[][]} gameGrid - The game grid
  * @returns {boolean} True if value exists in block, false otherwise
  */
-export function isInBlock(currentValue, currentRow, currentCol, gameGrid) {
+function isInBlock(currentValue, currentRow, currentCol, gameGrid) {
   const rows = getBlockRange(currentRow);
   const columns = getBlockRange(currentCol);
 
