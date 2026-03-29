@@ -19,18 +19,18 @@ import { generateCompleteSudokuGrid } from '../src/index.js';
 
 describe('getCandidates()', () => {
 
-  // Полностью заполненная сетка — для каждой клетки кандидатов 0
+  // Fully filled grid — no candidates for any cell
   test('filled cell returns empty array', () => {
     const grid = generateCompleteSudokuGrid();
     const result = getCandidates(grid, 0, 0);
     assert.deepEqual(result, [], 'Filled cell should have no candidates');
   });
 
-  // Пустая клетка в заполненной сетке — единственный кандидат совпадает с решением
+  // Single empty cell in a complete grid — the only candidate matches the solution value
   test('single empty cell in complete grid has exactly one candidate — the solution value', () => {
     const grid = generateCompleteSudokuGrid();
 
-    // Запоминаем значение и очищаем клетку
+    // Save the value and clear the cell
     const original = grid[4][4];
     grid[4][4] = 0;
 
@@ -39,11 +39,11 @@ describe('getCandidates()', () => {
     assert.equal(candidates[0], original, 'Candidate should match the original value');
   });
 
-  // Проверяем на нескольких случайных клетках для надёжности
+  // Verify across multiple random cells for robustness
   test('works correctly for multiple cells across the grid', () => {
     const grid = generateCompleteSudokuGrid();
 
-    // Проверяем 10 разных позиций
+    // Check 10 different positions
     const positions = [
       [0, 0], [0, 8], [2, 5], [3, 3], [4, 7],
       [5, 1], [6, 6], [7, 2], [8, 4], [1, 3],
@@ -57,12 +57,12 @@ describe('getCandidates()', () => {
       assert.equal(candidates.length, 1, `Cell [${r}][${c}] should have 1 candidate`);
       assert.equal(candidates[0], original, `Cell [${r}][${c}] candidate should be ${original}`);
 
-      // Восстанавливаем для следующей итерации
+      // Restore for the next iteration
       grid[r][c] = original;
     }
   });
 
-  // Пустая сетка — все 9 цифр допустимы
+  // Empty grid — all 9 digits are valid
   test('empty grid returns all 9 candidates', () => {
     const grid = Array.from({ length: 9 }, () => Array(9).fill(0));
 
@@ -70,11 +70,11 @@ describe('getCandidates()', () => {
     assert.deepEqual(candidates, [1, 2, 3, 4, 5, 6, 7, 8, 9]);
   });
 
-  // Строка заполнена кроме одной клетки
+  // Row is filled except for one cell
   test('row constraint narrows candidates correctly', () => {
     const grid = Array.from({ length: 9 }, () => Array(9).fill(0));
 
-    // Заполняем первую строку кроме последней клетки: 1,2,3,4,5,6,7,8,_
+    // Fill the first row except the last cell: 1,2,3,4,5,6,7,8,_
     for (let c = 0; c < 8; c++) {
       grid[0][c] = c + 1;
     }
@@ -83,11 +83,11 @@ describe('getCandidates()', () => {
     assert.deepEqual(candidates, [9], 'Only 9 should be available');
   });
 
-  // Колонка заполнена кроме одной клетки
+  // Column is filled except for one cell
   test('column constraint narrows candidates correctly', () => {
     const grid = Array.from({ length: 9 }, () => Array(9).fill(0));
 
-    // Заполняем первую колонку кроме последней клетки: 1,2,3,4,5,6,7,8,_
+    // Fill the first column except the last cell: 1,2,3,4,5,6,7,8,_
     for (let r = 0; r < 8; r++) {
       grid[r][0] = r + 1;
     }
@@ -96,11 +96,11 @@ describe('getCandidates()', () => {
     assert.deepEqual(candidates, [9], 'Only 9 should be available');
   });
 
-  // Блок 3×3 заполнен кроме одной клетки
+  // 3×3 block is filled except for one cell
   test('block constraint narrows candidates correctly', () => {
     const grid = Array.from({ length: 9 }, () => Array(9).fill(0));
 
-    // Заполняем верхний-левый блок кроме [2][2]
+    // Fill the top-left block except [2][2]
     // [1, 2, 3]
     // [4, 5, 6]
     // [7, 8, _]
@@ -116,25 +116,25 @@ describe('getCandidates()', () => {
     assert.deepEqual(candidates, [9], 'Only 9 should be available');
   });
 
-  // Комбинация ограничений — строка + колонка + блок
+  // Combined constraints — row + column + block
   test('combined constraints from row, column and block', () => {
     const grid = Array.from({ length: 9 }, () => Array(9).fill(0));
 
-    // Строка 0: ставим 1, 2, 3 в колонки 3, 4, 5
+    // Row 0: place 1, 2, 3 in columns 3, 4, 5
     grid[0][3] = 1;
     grid[0][4] = 2;
     grid[0][5] = 3;
 
-    // Колонка 0: ставим 4, 5 в строки 3, 4
+    // Column 0: place 4, 5 in rows 3, 4
     grid[3][0] = 4;
     grid[4][0] = 5;
 
-    // Блок [0,0]: ставим 6, 7 в [1][1] и [2][2]
+    // Block [0,0]: place 6, 7 in [1][1] and [2][2]
     grid[1][1] = 6;
     grid[2][2] = 7;
 
     const candidates = getCandidates(grid, 0, 0);
-    // Исключены: 1,2,3 (строка), 4,5 (колонка), 6,7 (блок) → остаётся 8, 9
+    // Excluded: 1,2,3 (row), 4,5 (column), 6,7 (block) — remaining: 8, 9
     assert.deepEqual(candidates, [8, 9]);
   });
 });
@@ -152,7 +152,7 @@ describe('buildCandidateMap()', () => {
 
   test('map keys match empty cells', () => {
     const grid = generateCompleteSudokuGrid();
-    // Очищаем 3 клетки
+    // Clear 3 cells
     grid[0][0] = 0;
     grid[4][4] = 0;
     grid[8][8] = 0;
@@ -166,12 +166,12 @@ describe('buildCandidateMap()', () => {
 });
 
 // ============================================================================
-// solve() — Easy техники (Naked Single + Hidden Single)
+// solve() — Easy techniques (Naked Single + Hidden Single)
 // ============================================================================
 
 describe('solve() — Easy techniques', () => {
 
-  // Пазл где убрана одна клетка — решается Naked Single за один шаг
+  // Puzzle with one empty cell — solved by Naked Single in one step
   test('solves grid with one empty cell (naked single)', () => {
     const grid = generateCompleteSudokuGrid();
     const original = grid[3][5];
@@ -183,11 +183,11 @@ describe('solve() — Easy techniques', () => {
     assert.equal(result.steps[0].technique, 'nakedSingle');
   });
 
-  // Пазл где убрано несколько клеток из разных регионов — всё ещё Naked Single
+  // Puzzle with a few empty cells from different regions — still Naked Single
   test('solves grid with a few scattered empty cells', () => {
     const grid = generateCompleteSudokuGrid();
 
-    // Убираем по одной клетке из разных строк/колонок/блоков
+    // Remove one cell from each different row/column/block
     const removed = [[0, 1], [3, 4], [6, 7]];
     const originals = removed.map(([r, c]) => {
       const v = grid[r][c];
@@ -203,14 +203,14 @@ describe('solve() — Easy techniques', () => {
     });
   });
 
-  // Настоящий Easy-пазл — решается только Naked Single и Hidden Single
-  // Берём заполненную сетку и убираем ~35 клеток так чтобы каждое удаление
-  // оставляло хотя бы одну клетку с единственным кандидатом
+  // Real easy puzzle — solved only by Naked Single and Hidden Single
+  // Take a complete grid and remove ~35 cells such that each removal
+  // leaves at least one cell with a single candidate
   test('solves a real easy puzzle (naked + hidden singles only)', () => {
     const solution = generateCompleteSudokuGrid();
     const grid = solution.map(row => [...row]);
 
-    // Убираем клетки по одной, проверяя что пазл всё ещё решается Easy-техниками
+    // Remove cells one by one, verifying the puzzle is still solvable with Easy techniques
     const positions = [];
     for (let r = 0; r < 9; r++) {
       for (let c = 0; c < 9; c++) {
@@ -218,7 +218,7 @@ describe('solve() — Easy techniques', () => {
       }
     }
 
-    // Перемешиваем
+    // Shuffle
     for (let i = positions.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [positions[i], positions[j]] = [positions[j], positions[i]];
@@ -231,23 +231,23 @@ describe('solve() — Easy techniques', () => {
       const backup = grid[r][c];
       grid[r][c] = 0;
 
-      // Копия для проверки
+      // Copy for testing
       const testGrid = grid.map(row => [...row]);
       const result = solve(testGrid);
 
       if (result.solved) {
         removed++;
       } else {
-        grid[r][c] = backup; // Откат — без этой клетки не решается
+        grid[r][c] = backup; // Rollback — unsolvable without this cell
       }
     }
 
-    // Теперь решаем финальный пазл
+    // Now solve the final puzzle
     const result = solve(grid);
     assert.equal(result.solved, true, `Should solve puzzle with ${removed} empty cells`);
     assert.ok(result.steps.length > 0, 'Should have applied some techniques');
 
-    // Все использованные техники — только Easy
+    // All techniques used must be Easy only
     const easyTechniques = new Set(['nakedSingle', 'hiddenSingle']);
     for (const step of result.steps) {
       assert.ok(easyTechniques.has(step.technique),
@@ -255,7 +255,7 @@ describe('solve() — Easy techniques', () => {
     }
   });
 
-  // solve() не должен ломать уже заполненную сетку
+  // solve() should not break an already filled grid
   test('already solved grid returns immediately', () => {
     const grid = generateCompleteSudokuGrid();
     const copy = grid.map(row => [...row]);
@@ -268,19 +268,19 @@ describe('solve() — Easy techniques', () => {
 });
 
 // ============================================================================
-// solve() — Medium техники (Naked Pair, Hidden Pair, Naked Triple)
+// solve() — Medium techniques (Naked Pair, Hidden Pair, Naked Triple)
 // ============================================================================
 
 describe('solve() — Medium techniques', () => {
 
-  // Naked Pair: руками строим ситуацию где две клетки в строке имеют {3,7}
-  // и 3 или 7 есть как кандидат в другой клетке этой строки
+  // Naked Pair: manually construct a situation where two cells in a row have {3,7}
+  // and 3 or 7 is a candidate in another cell of that row
   test('naked pair eliminates candidates from peers', () => {
     // Берём решённую сетку и выборочно обнуляем так чтобы в строке
     // появилась naked pair ситуация
     const grid = generateCompleteSudokuGrid();
 
-    // Убираем достаточно клеток чтобы решатель потенциально использовал пары
+    // Remove enough cells for the solver to potentially use pairs
     const positions = [];
     for (let r = 0; r < 9; r++) {
       for (let c = 0; c < 9; c++) {
@@ -288,7 +288,7 @@ describe('solve() — Medium techniques', () => {
       }
     }
 
-    // Перемешиваем
+    // Shuffle
     for (let i = positions.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [positions[i], positions[j]] = [positions[j], positions[i]];
@@ -309,11 +309,11 @@ describe('solve() — Medium techniques', () => {
       }
     }
 
-    // Решаем и проверяем что решение корректно
+    // Solve and verify the result is correct
     const result = solve(grid);
     assert.equal(result.solved, true, `Should solve puzzle with ${removed} empty cells`);
 
-    // Проверяем что результат — валидная сетка (нет нулей, нет дубликатов в строках)
+    // Verify the result is a valid grid (no zeros, no duplicates in rows)
     for (let r = 0; r < 9; r++) {
       const row = new Set(result.grid[r]);
       assert.equal(row.size, 9, `Row ${r} should have 9 unique values`);
@@ -323,7 +323,7 @@ describe('solve() — Medium techniques', () => {
     }
   });
 
-  // Проверяем что solve корректно решает пазл с Medium-техниками и результат совпадает с решением
+  // Verify that solve correctly solves a puzzle with Medium techniques and the result matches the solution
   test('solution matches the original complete grid', () => {
     const solution = generateCompleteSudokuGrid();
     const grid = solution.map(row => [...row]);
@@ -358,7 +358,7 @@ describe('solve() — Medium techniques', () => {
     const result = solve(grid);
     assert.equal(result.solved, true);
 
-    // Каждая восстановленная клетка должна совпадать с оригиналом
+    // Every restored cell must match the original
     for (let r = 0; r < 9; r++) {
       for (let c = 0; c < 9; c++) {
         assert.equal(result.grid[r][c], solution[r][c],
@@ -369,13 +369,13 @@ describe('solve() — Medium techniques', () => {
 });
 
 // ============================================================================
-// solve() — Hard техники (X-Wing, Pointing Pairs)
+// solve() — Hard techniques (X-Wing, Pointing Pairs)
 // ============================================================================
 
 describe('solve() — Hard techniques', () => {
 
-  // Solve с Hard-техниками должен решать более сложные пазлы
-  // и результат должен совпадать с оригиналом
+  // Solver with Hard techniques should solve more complex puzzles
+  // and the result must match the original
   test('solves harder puzzles with more empty cells', () => {
     const solution = generateCompleteSudokuGrid();
     const grid = solution.map(row => [...row]);
@@ -392,7 +392,7 @@ describe('solve() — Hard techniques', () => {
       [positions[i], positions[j]] = [positions[j], positions[i]];
     }
 
-    // Пытаемся убрать побольше — до 50 клеток
+    // Try to remove more — up to 50 cells
     let removed = 0;
     for (const [r, c] of positions) {
       if (removed >= 50) break;
@@ -411,7 +411,7 @@ describe('solve() — Hard techniques', () => {
     const result = solve(grid);
     assert.equal(result.solved, true, `Should solve puzzle with ${removed} empty cells`);
 
-    // Результат совпадает с оригиналом
+    // Result must match the original
     for (let r = 0; r < 9; r++) {
       for (let c = 0; c < 9; c++) {
         assert.equal(result.grid[r][c], solution[r][c],
@@ -420,7 +420,7 @@ describe('solve() — Hard techniques', () => {
     }
   });
 
-  // Стабильность: решаем 20 случайных пазлов подряд
+  // Stability: solve 20 random puzzles in a row
   test('consistently solves 20 random puzzles', () => {
     for (let attempt = 0; attempt < 20; attempt++) {
       const solution = generateCompleteSudokuGrid();
@@ -462,12 +462,12 @@ describe('solve() — Hard techniques', () => {
 });
 
 // ============================================================================
-// solve() — Expert техники (Swordfish, XY-Wing, Unique Rectangle)
+// solve() — Expert techniques (Swordfish, XY-Wing, Unique Rectangle)
 // ============================================================================
 
 describe('solve() — Expert techniques', () => {
 
-  // С полным набором техник пазлы с максимумом удалённых клеток должны решаться
+  // With the full set of techniques, puzzles with the maximum number of removed cells should be solvable
   test('solves puzzles with maximum empty cells', () => {
     const solution = generateCompleteSudokuGrid();
     const grid = solution.map(row => [...row]);
@@ -481,7 +481,7 @@ describe('solve() — Expert techniques', () => {
       [positions[i], positions[j]] = [positions[j], positions[i]];
     }
 
-    // Пытаемся убрать максимум
+    // Try to remove the maximum
     let removed = 0;
     for (const [r, c] of positions) {
       if (removed >= 55) break;
@@ -506,7 +506,7 @@ describe('solve() — Expert techniques', () => {
     }
   });
 
-  // Стабильность: 5 пазлов с агрессивным удалением
+  // Stability: 5 puzzles with aggressive removal
   test('stable across 5 aggressive puzzles', () => {
     for (let attempt = 0; attempt < 5; attempt++) {
       const solution = generateCompleteSudokuGrid();
@@ -548,47 +548,47 @@ describe('solve() — Expert techniques', () => {
 });
 
 // ============================================================================
-// countSolutions() — проверка уникальности
+// countSolutions() — uniqueness check
 // ============================================================================
 
 describe('countSolutions()', () => {
 
-  // Полная сетка — ровно одно решение (она сама)
+  // Complete grid — exactly one solution (itself)
   test('complete grid has exactly 1 solution', () => {
     const grid = generateCompleteSudokuGrid();
     assert.equal(countSolutions(grid), 1);
   });
 
-  // Одна пустая клетка — всё ещё уникальное решение
+  // One empty cell — still a unique solution
   test('grid with one empty cell has 1 solution', () => {
     const grid = generateCompleteSudokuGrid();
     grid[4][4] = 0;
     assert.equal(countSolutions(grid), 1);
   });
 
-  // Пустая сетка — больше одного решения
+  // Empty grid — more than one solution
   test('empty grid has multiple solutions', () => {
     const grid = Array.from({ length: 9 }, () => Array(9).fill(0));
     assert.equal(countSolutions(grid), 2, 'Should detect multiple solutions (capped at 2)');
   });
 
-  // Невозможный пазл — единственная пустая клетка не имеет кандидатов
+  // Impossible puzzle — the only empty cell has no candidates
   test('impossible puzzle has 0 solutions', () => {
     const solution = generateCompleteSudokuGrid();
     const grid = solution.map(row => [...row]);
     const V = solution[4][4];
 
-    // Опустошаем [4][4] — туда должно идти V
+    // Clear [4][4] — V should go there
     grid[4][4] = 0;
-    // Ставим V в [3][4]: тот же блок и та же колонка
-    // Теперь V исключён из кандидатов [4][4] и через колонку, и через блок.
-    // Строка 4 уже покрывала {1..9}-{V} → в сумме все 9 значений исключены → 0 кандидатов
+    // Place V in [3][4]: same block and same column
+    // V is now excluded from [4][4]'s candidates via both column and block.
+    // Row 4 already covered {1..9}-{V} — all 9 values are excluded — 0 candidates
     grid[3][4] = V;
 
     assert.equal(countSolutions(grid), 0);
   });
 
-  // Пазл с контролируемым удалением — уникальное решение
+  // Puzzle with controlled removal — unique solution
   test('well-formed puzzle has 1 solution', () => {
     const solution = generateCompleteSudokuGrid();
     const grid = solution.map(row => [...row]);
@@ -617,7 +617,7 @@ describe('countSolutions()', () => {
     assert.equal(countSolutions(grid), 1, `Puzzle with ${removed} empty cells should have unique solution`);
   });
 
-  // Не мутирует входную сетку
+  // Does not mutate the input grid
   test('does not mutate the input grid', () => {
     const grid = generateCompleteSudokuGrid();
     grid[0][0] = 0;
@@ -686,7 +686,7 @@ describe('calculateScore() + getDifficulty()', () => {
 });
 
 // ============================================================================
-// generatePuzzle() — управляемая генерация по уровню сложности
+// generatePuzzle() — controlled generation by difficulty level
 // ============================================================================
 
 describe('generatePuzzle()', () => {
@@ -695,7 +695,7 @@ describe('generatePuzzle()', () => {
     const solution = generateCompleteSudokuGrid();
     const result = generatePuzzle(solution, 'easy');
 
-    // Пазл содержит нули
+    // Puzzle contains zeros
     let emptyCells = 0;
     for (let r = 0; r < 9; r++) {
       for (let c = 0; c < 9; c++) {
@@ -704,10 +704,10 @@ describe('generatePuzzle()', () => {
     }
     assert.ok(emptyCells > 0, 'Puzzle should have empty cells');
 
-    // Решение совпадает с оригиналом
+    // Solution matches the original
     assert.deepEqual(result.solution, solution);
 
-    // Пазл решаем и имеет уникальное решение
+    // Puzzle is solvable and has a unique solution
     assert.equal(countSolutions(result.puzzle), 1);
   });
 
@@ -716,11 +716,11 @@ describe('generatePuzzle()', () => {
       const solution = generateCompleteSudokuGrid();
       const result = generatePuzzle(solution, difficulty);
 
-      // Уникальное решение
+      // Unique solution
       assert.equal(countSolutions(result.puzzle), 1,
         `${difficulty} puzzle should have unique solution`);
 
-      // Заполненные клетки совпадают с решением
+      // Filled cells match the solution
       for (let r = 0; r < 9; r++) {
         for (let c = 0; c < 9; c++) {
           if (result.puzzle[r][c] !== 0) {
@@ -744,7 +744,7 @@ describe('generatePuzzle()', () => {
     const easyResult = generatePuzzle(solution, 'easy');
     const hardResult = generatePuzzle(solution, 'hard');
 
-    // Hard должен убрать больше клеток чем Easy (не строгая гарантия, но обычно так)
+    // Hard should have more empty cells than Easy (not a strict guarantee, but typically true)
     const easyEmpty = countEmpty(easyResult.puzzle);
     const hardEmpty = countEmpty(hardResult.puzzle);
 

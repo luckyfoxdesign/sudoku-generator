@@ -1,42 +1,42 @@
 /**
  * Solver module for Sudoku Generator
  *
- * Техники решения судоку — от простых к продвинутым.
- * Используется для определения сложности пазла и контролируемой генерации.
+ * Sudoku solving techniques — from simple to advanced.
+ * Used for puzzle difficulty assessment and controlled generation.
  *
  * @license MIT
  */
 
 // ============================================================================
-// CANDIDATES — фундамент решателя
+// CANDIDATES — the foundation of the solver
 // ============================================================================
 
 /**
- * Возвращает список допустимых цифр для клетки.
- * Проверяет строку, колонку и блок 3×3 — всё что не занято.
+ * Returns the list of valid digits for a cell.
+ * Checks the row, column, and 3×3 block for occupied values.
  *
- * @param {number[][]} grid - Сетка 9×9, где 0 = пустая клетка
- * @param {number} row - Строка (0-8)
- * @param {number} col - Колонка (0-8)
- * @returns {number[]} Массив допустимых цифр (1-9)
+ * @param {number[][]} grid - 9×9 grid, where 0 = empty cell
+ * @param {number} row - Row (0-8)
+ * @param {number} col - Column (0-8)
+ * @returns {number[]} Array of valid digits (1-9)
  */
 export function getCandidates(grid, row, col) {
-  // Заполненная клетка — кандидатов нет
+  // Filled cell — no candidates
   if (grid[row][col] !== 0) return [];
 
   const used = new Set();
 
-  // Строка
+  // Row
   for (let c = 0; c < 9; c++) {
     if (grid[row][c] !== 0) used.add(grid[row][c]);
   }
 
-  // Колонка
+  // Column
   for (let r = 0; r < 9; r++) {
     if (grid[r][col] !== 0) used.add(grid[r][col]);
   }
 
-  // Блок 3×3
+  // 3×3 block
   const blockRow = Math.floor(row / 3) * 3;
   const blockCol = Math.floor(col / 3) * 3;
   for (let r = blockRow; r < blockRow + 3; r++) {
@@ -45,7 +45,7 @@ export function getCandidates(grid, row, col) {
     }
   }
 
-  // Всё что не использовано — допустимо
+  // Everything not used is valid
   const candidates = [];
   for (let n = 1; n <= 9; n++) {
     if (!used.has(n)) candidates.push(n);
@@ -54,12 +54,12 @@ export function getCandidates(grid, row, col) {
 }
 
 // ============================================================================
-// КАРТА КАНДИДАТОВ — кандидаты для всей сетки разом
+// CANDIDATE MAP — candidates for the entire grid at once
 // ============================================================================
 
 /**
- * Строит карту кандидатов для всех пустых клеток сетки.
- * Ключ — "row,col", значение — Set допустимых цифр.
+ * Builds a candidate map for all empty cells in the grid.
+ * Key — "row,col", value — Set of valid digits.
  *
  * @param {number[][]} grid - Сетка 9×9
  * @returns {Map<string, Set<number>>}
@@ -77,30 +77,30 @@ export function buildCandidateMap(grid) {
 }
 
 /**
- * Убирает кандидата из всех пустых клеток в строке, колонке и блоке 3×3.
- * Вызывается после того как клетка получила значение.
+ * Removes a candidate from all empty cells in the same row, column, and 3×3 block.
+ * Called after a cell receives a value.
  *
  * @param {Map<string, Set<number>>} candidateMap
  * @param {number} row
  * @param {number} col
- * @param {number} value - Значение, которое нужно убрать из кандидатов соседей
+ * @param {number} value - Value to remove from peer candidates
  */
 function eliminateFromPeers(candidateMap, row, col, value) {
-  // Строка
+  // Row
   for (let c = 0; c < 9; c++) {
     const key = `${row},${c}`;
     const set = candidateMap.get(key);
     if (set) set.delete(value);
   }
 
-  // Колонка
+  // Column
   for (let r = 0; r < 9; r++) {
     const key = `${r},${col}`;
     const set = candidateMap.get(key);
     if (set) set.delete(value);
   }
 
-  // Блок 3×3
+  // 3×3 block
   const br = Math.floor(row / 3) * 3;
   const bc = Math.floor(col / 3) * 3;
   for (let r = br; r < br + 3; r++) {
@@ -113,8 +113,8 @@ function eliminateFromPeers(candidateMap, row, col, value) {
 }
 
 /**
- * Ставит значение в клетку, убирает её из карты кандидатов
- * и чистит кандидатов у соседей.
+ * Places a value in a cell, removes it from the candidate map
+ * and cleans up candidates from peers.
  *
  * @param {number[][]} grid
  * @param {Map<string, Set<number>>} candidateMap
@@ -129,16 +129,16 @@ function placeValue(grid, candidateMap, row, col, value) {
 }
 
 // ============================================================================
-// ТЕХНИКИ РЕШЕНИЯ — Easy
+// SOLVING TECHNIQUES — Easy
 // ============================================================================
 
 /**
- * Naked Single — в клетке остался ровно один кандидат.
- * Самая простая техника: если у клетки единственный вариант — ставим его.
+ * Naked Single — exactly one candidate remains in the cell.
+ * The simplest technique: if a cell has only one option — place it.
  *
  * @param {number[][]} grid
  * @param {Map<string, Set<number>>} candidateMap
- * @returns {number} Количество поставленных значений за один проход
+ * @returns {number} Number of values placed in one pass
  */
 function nakedSingle(grid, candidateMap) {
   let placed = 0;
@@ -156,21 +156,21 @@ function nakedSingle(grid, candidateMap) {
 }
 
 /**
- * Hidden Single — цифра встречается как кандидат только в одной клетке региона.
- * Проверяет строки, колонки и блоки 3×3.
+ * Hidden Single — a digit appears as a candidate in only one cell of a region.
+ * Checks rows, columns, and 3×3 blocks.
  *
  * @param {number[][]} grid
  * @param {Map<string, Set<number>>} candidateMap
- * @returns {number} Количество поставленных значений за один проход
+ * @returns {number} Number of values placed in one pass
  */
 function hiddenSingle(grid, candidateMap) {
   let placed = 0;
 
-  // Проверяем каждый регион: 9 строк, 9 колонок, 9 блоков
+  // Check each region: 9 rows, 9 columns, 9 blocks
   const regions = getAllRegions();
 
   for (const region of regions) {
-    // Для каждой цифры 1-9 ищем: в скольких клетках региона она кандидат?
+    // For each digit 1-9, count how many cells in the region have it as a candidate
     for (let num = 1; num <= 9; num++) {
       let found = null;
       let count = 0;
@@ -185,7 +185,7 @@ function hiddenSingle(grid, candidateMap) {
         }
       }
 
-      // Цифра встречается ровно в одной клетке региона — ставим
+      // Digit appears in exactly one cell of the region — place it
       if (count === 1) {
         placeValue(grid, candidateMap, found.r, found.c, num);
         placed++;
@@ -197,33 +197,33 @@ function hiddenSingle(grid, candidateMap) {
 }
 
 // ============================================================================
-// РЕГИОНЫ — строки, колонки, блоки как списки координат
+// REGIONS — rows, columns, blocks as coordinate lists
 // ============================================================================
 
 /**
- * Возвращает все 27 регионов судоку: 9 строк + 9 колонок + 9 блоков.
- * Каждый регион — массив из 9 пар [row, col].
+ * Returns all 27 Sudoku regions: 9 rows + 9 columns + 9 blocks.
+ * Each region is an array of 9 [row, col] pairs.
  *
  * @returns {number[][][]}
  */
 function getAllRegions() {
   const regions = [];
 
-  // Строки
+  // Rows
   for (let r = 0; r < 9; r++) {
     const row = [];
     for (let c = 0; c < 9; c++) row.push([r, c]);
     regions.push(row);
   }
 
-  // Колонки
+  // Columns
   for (let c = 0; c < 9; c++) {
     const col = [];
     for (let r = 0; r < 9; r++) col.push([r, c]);
     regions.push(col);
   }
 
-  // Блоки 3×3
+  // 3×3 blocks
   for (let br = 0; br < 9; br += 3) {
     for (let bc = 0; bc < 9; bc += 3) {
       const block = [];
@@ -238,23 +238,23 @@ function getAllRegions() {
 }
 
 // ============================================================================
-// ТЕХНИКИ РЕШЕНИЯ — Medium
+// SOLVING TECHNIQUES — Medium
 // ============================================================================
 
 /**
- * Naked Pair — две клетки одного региона имеют одинаковые два кандидата.
- * Эти два числа можно исключить из всех остальных клеток региона.
+ * Naked Pair — two cells in the same region share exactly two identical candidates.
+ * Those two digits can be eliminated from all other cells in the region.
  *
  * @param {number[][]} grid
  * @param {Map<string, Set<number>>} candidateMap
- * @returns {number} Количество исключённых кандидатов
+ * @returns {number} Number of eliminated candidates
  */
 function nakedPair(grid, candidateMap) {
   let eliminated = 0;
   const regions = getAllRegions();
 
   for (const region of regions) {
-    // Собираем клетки региона с ровно 2 кандидатами
+    // Collect cells in the region with exactly 2 candidates
     const pairs = [];
     for (const [r, c] of region) {
       const set = candidateMap.get(`${r},${c}`);
@@ -263,13 +263,13 @@ function nakedPair(grid, candidateMap) {
       }
     }
 
-    // Ищем две клетки с одинаковыми кандидатами
+    // Look for two cells with identical candidates
     for (let i = 0; i < pairs.length; i++) {
       for (let j = i + 1; j < pairs.length; j++) {
         const a = pairs[i];
         const b = pairs[j];
 
-        // Сравниваем множества
+        // Compare sets
         if (a.candidates.size !== b.candidates.size) continue;
         let match = true;
         for (const v of a.candidates) {
@@ -277,7 +277,7 @@ function nakedPair(grid, candidateMap) {
         }
         if (!match) continue;
 
-        // Нашли пару — убираем эти числа из остальных клеток региона
+        // Found a pair — remove these digits from other cells in the region
         const pairValues = [...a.candidates];
         for (const [r, c] of region) {
           if ((r === a.r && c === a.c) || (r === b.r && c === b.c)) continue;
@@ -298,19 +298,19 @@ function nakedPair(grid, candidateMap) {
 }
 
 /**
- * Hidden Pair — две цифры встречаются как кандидаты только в двух одних и тех же клетках региона.
- * Все остальные кандидаты из этих двух клеток можно убрать.
+ * Hidden Pair — two digits appear as candidates only in the same two cells of a region.
+ * All other candidates in those two cells can be removed.
  *
  * @param {number[][]} grid
  * @param {Map<string, Set<number>>} candidateMap
- * @returns {number} Количество исключённых кандидатов
+ * @returns {number} Number of eliminated candidates
  */
 function hiddenPair(grid, candidateMap) {
   let eliminated = 0;
   const regions = getAllRegions();
 
   for (const region of regions) {
-    // Для каждой цифры 1-9 собираем в каких клетках региона она кандидат
+    // For each digit 1-9, collect which cells in the region have it as a candidate
     const numPositions = new Map();
     for (let num = 1; num <= 9; num++) {
       const positions = [];
@@ -323,7 +323,7 @@ function hiddenPair(grid, candidateMap) {
       }
     }
 
-    // Ищем две цифры с одинаковыми позициями
+    // Look for two digits with identical positions
     const nums = [...numPositions.keys()];
     for (let i = 0; i < nums.length; i++) {
       for (let j = i + 1; j < nums.length; j++) {
@@ -332,7 +332,7 @@ function hiddenPair(grid, candidateMap) {
 
         if (posA[0] !== posB[0] || posA[1] !== posB[1]) continue;
 
-        // Нашли hidden pair — оставляем только эти две цифры в обеих клетках
+        // Found hidden pair — keep only these two digits in both cells
         const keepValues = new Set([nums[i], nums[j]]);
         for (const key of posA) {
           const set = candidateMap.get(key);
@@ -352,20 +352,20 @@ function hiddenPair(grid, candidateMap) {
 }
 
 /**
- * Naked Triple — три клетки одного региона содержат в сумме ровно три кандидата.
- * Каждая клетка имеет 2 или 3 кандидата, объединение = 3 числа.
- * Эти числа исключаются из остальных клеток региона.
+ * Naked Triple — three cells in the same region collectively contain exactly three candidates.
+ * Each cell has 2 or 3 candidates, and their union equals exactly 3 digits.
+ * Those digits are eliminated from all other cells in the region.
  *
  * @param {number[][]} grid
  * @param {Map<string, Set<number>>} candidateMap
- * @returns {number} Количество исключённых кандидатов
+ * @returns {number} Number of eliminated candidates
  */
 function nakedTriple(grid, candidateMap) {
   let eliminated = 0;
   const regions = getAllRegions();
 
   for (const region of regions) {
-    // Клетки с 2 или 3 кандидатами
+    // Cells with 2 or 3 candidates
     const cells = [];
     for (const [r, c] of region) {
       const set = candidateMap.get(`${r},${c}`);
@@ -374,11 +374,11 @@ function nakedTriple(grid, candidateMap) {
       }
     }
 
-    // Перебираем тройки
+    // Iterate over triples
     for (let i = 0; i < cells.length; i++) {
       for (let j = i + 1; j < cells.length; j++) {
         for (let k = j + 1; k < cells.length; k++) {
-          // Объединяем кандидатов трёх клеток
+          // Union the candidates of three cells
           const union = new Set([
             ...cells[i].candidates,
             ...cells[j].candidates,
@@ -387,7 +387,7 @@ function nakedTriple(grid, candidateMap) {
 
           if (union.size !== 3) continue;
 
-          // Нашли тройку — убираем эти числа из остальных клеток
+          // Found a triple — remove these digits from other cells
           const tripleKeys = new Set([
             `${cells[i].r},${cells[i].c}`,
             `${cells[j].r},${cells[j].c}`,
@@ -415,23 +415,23 @@ function nakedTriple(grid, candidateMap) {
 }
 
 // ============================================================================
-// ТЕХНИКИ РЕШЕНИЯ — Hard
+// SOLVING TECHNIQUES — Hard
 // ============================================================================
 
 /**
- * X-Wing — цифра-кандидат в двух строках встречается ровно в двух одинаковых колонках.
- * Можно исключить эту цифру из этих колонок во всех остальных строках.
- * Работает симметрично: проверяем и строки→колонки, и колонки→строки.
+ * X-Wing — a candidate digit appears in exactly two columns across two rows.
+ * That digit can be eliminated from those columns in all other rows.
+ * Works symmetrically: checks rows→columns and columns→rows.
  *
  * @param {number[][]} grid
  * @param {Map<string, Set<number>>} candidateMap
- * @returns {number} Количество исключённых кандидатов
+ * @returns {number} Number of eliminated candidates
  */
 function xWing(grid, candidateMap) {
   let eliminated = 0;
 
   for (let num = 1; num <= 9; num++) {
-    // Строки → колонки: ищем строки где num встречается ровно в 2 колонках
+    // Rows → columns: find rows where num appears in exactly 2 columns
     const rowPositions = [];
     for (let r = 0; r < 9; r++) {
       const cols = [];
@@ -442,14 +442,14 @@ function xWing(grid, candidateMap) {
       if (cols.length === 2) rowPositions.push({ line: r, positions: cols });
     }
 
-    // Ищем две строки с одинаковыми колонками
+    // Look for two rows with the same columns
     for (let i = 0; i < rowPositions.length; i++) {
       for (let j = i + 1; j < rowPositions.length; j++) {
         const a = rowPositions[i];
         const b = rowPositions[j];
         if (a.positions[0] !== b.positions[0] || a.positions[1] !== b.positions[1]) continue;
 
-        // X-Wing найден — убираем num из этих колонок в остальных строках
+        // X-Wing found — remove num from these columns in other rows
         for (const col of a.positions) {
           for (let r = 0; r < 9; r++) {
             if (r === a.line || r === b.line) continue;
@@ -463,7 +463,7 @@ function xWing(grid, candidateMap) {
       }
     }
 
-    // Колонки → строки: ищем колонки где num встречается ровно в 2 строках
+    // Columns → rows: find columns where num appears in exactly 2 rows
     const colPositions = [];
     for (let c = 0; c < 9; c++) {
       const rows = [];
@@ -480,7 +480,7 @@ function xWing(grid, candidateMap) {
         const b = colPositions[j];
         if (a.positions[0] !== b.positions[0] || a.positions[1] !== b.positions[1]) continue;
 
-        // X-Wing найден — убираем num из этих строк в остальных колонках
+        // X-Wing found — remove num from these rows in other columns
         for (const row of a.positions) {
           for (let c = 0; c < 9; c++) {
             if (c === a.line || c === b.line) continue;
@@ -501,27 +501,27 @@ function xWing(grid, candidateMap) {
 /**
  * Pointing Pairs / Box-Line Reduction.
  *
- * Pointing Pairs: если кандидат внутри блока 3×3 сосредоточен только в одной
- * строке или колонке → убираем его из этой строки/колонки за пределами блока.
+ * Pointing Pairs: if a candidate within a 3×3 block is confined to a single
+ * row or column — remove it from that row/column outside the block.
  *
- * Box-Line Reduction (обратное): если кандидат в строке/колонке встречается
- * только внутри одного блока → убираем его из блока за пределами этой строки/колонки.
+ * Box-Line Reduction (reverse): if a candidate in a row/column only appears
+ * within a single block — remove it from the block outside that row/column.
  *
  * @param {number[][]} grid
  * @param {Map<string, Set<number>>} candidateMap
- * @returns {number} Количество исключённых кандидатов
+ * @returns {number} Number of eliminated candidates
  */
 function pointingPairs(grid, candidateMap) {
   let eliminated = 0;
 
-  // Pointing Pairs: для каждого блока и каждой цифры
+  // Pointing Pairs: for each block and each digit
   for (let br = 0; br < 9; br += 3) {
     for (let bc = 0; bc < 9; bc += 3) {
       for (let num = 1; num <= 9; num++) {
         const rows = new Set();
         const cols = new Set();
 
-        // Где в блоке встречается num как кандидат?
+        // Where in the block does num appear as a candidate?
         for (let r = br; r < br + 3; r++) {
           for (let c = bc; c < bc + 3; c++) {
             const set = candidateMap.get(`${r},${c}`);
@@ -532,11 +532,11 @@ function pointingPairs(grid, candidateMap) {
           }
         }
 
-        // Все кандидаты num в одной строке — убираем из строки за пределами блока
+        // All candidates for num are in one row — remove from that row outside the block
         if (rows.size === 1) {
           const row = [...rows][0];
           for (let c = 0; c < 9; c++) {
-            if (c >= bc && c < bc + 3) continue; // Пропускаем сам блок
+            if (c >= bc && c < bc + 3) continue; // Skip the block itself
             const set = candidateMap.get(`${row},${c}`);
             if (set && set.has(num)) {
               set.delete(num);
@@ -545,7 +545,7 @@ function pointingPairs(grid, candidateMap) {
           }
         }
 
-        // Все кандидаты num в одной колонке — убираем из колонки за пределами блока
+        // All candidates for num are in one column — remove from that column outside the block
         if (cols.size === 1) {
           const col = [...cols][0];
           for (let r = 0; r < 9; r++) {
@@ -561,7 +561,7 @@ function pointingPairs(grid, candidateMap) {
     }
   }
 
-  // Box-Line Reduction: для каждой строки и каждой цифры
+  // Box-Line Reduction: for each row and each digit
   for (let row = 0; row < 9; row++) {
     for (let num = 1; num <= 9; num++) {
       const blocks = new Set();
@@ -572,7 +572,7 @@ function pointingPairs(grid, candidateMap) {
         }
       }
 
-      // Все кандидаты num в строке лежат в одном блоке
+      // All candidates for num in the row are in one block
       if (blocks.size === 1) {
         const bc = [...blocks][0] * 3;
         const br = Math.floor(row / 3) * 3;
@@ -590,7 +590,7 @@ function pointingPairs(grid, candidateMap) {
     }
   }
 
-  // Box-Line Reduction: для каждой колонки и каждой цифры
+  // Box-Line Reduction: for each column and each digit
   for (let col = 0; col < 9; col++) {
     for (let num = 1; num <= 9; num++) {
       const blocks = new Set();
@@ -622,25 +622,25 @@ function pointingPairs(grid, candidateMap) {
 }
 
 // ============================================================================
-// ТЕХНИКИ РЕШЕНИЯ — Expert
+// SOLVING TECHNIQUES — Expert
 // ============================================================================
 
 /**
- * Swordfish — расширение X-Wing на три строки и три колонки.
- * Цифра-кандидат в трёх строках встречается только в 2-3 колонках,
- * и объединение этих колонок = ровно 3.
- * Тогда можно исключить эту цифру из этих колонок во всех остальных строках.
- * Работает симметрично для колонок→строки.
+ * Swordfish — an extension of X-Wing across three rows and three columns.
+ * A candidate digit in three rows appears in only 2-3 columns,
+ * and the union of those columns is exactly 3.
+ * The digit can then be eliminated from those columns in all other rows.
+ * Works symmetrically for columns→rows.
  *
  * @param {number[][]} grid
  * @param {Map<string, Set<number>>} candidateMap
- * @returns {number} Количество исключённых кандидатов
+ * @returns {number} Number of eliminated candidates
  */
 function swordfish(grid, candidateMap) {
   let eliminated = 0;
 
   for (let num = 1; num <= 9; num++) {
-    // Строки → колонки
+    // Rows → columns
     const rowData = [];
     for (let r = 0; r < 9; r++) {
       const cols = [];
@@ -663,7 +663,7 @@ function swordfish(grid, candidateMap) {
           ]);
           if (union.size !== 3) continue;
 
-          // Swordfish найден — убираем num из этих колонок в остальных строках
+          // Swordfish found — remove num from these columns in other rows
           const lines = new Set([rowData[i].line, rowData[j].line, rowData[k].line]);
           for (const col of union) {
             for (let r = 0; r < 9; r++) {
@@ -679,7 +679,7 @@ function swordfish(grid, candidateMap) {
       }
     }
 
-    // Колонки → строки
+    // Columns → rows
     const colData = [];
     for (let c = 0; c < 9; c++) {
       const rows = [];
@@ -722,22 +722,22 @@ function swordfish(grid, candidateMap) {
 }
 
 /**
- * XY-Wing — три клетки с двумя кандидатами каждая образуют цепочку исключений.
+ * XY-Wing — three bi-value cells form an elimination chain.
  *
- * Pivot: клетка с кандидатами {X, Y}
- * Wing1: клетка-пир pivot с кандидатами {X, Z}
- * Wing2: клетка-пир pivot с кандидатами {Y, Z}
+ * Pivot: cell with candidates {X, Y}
+ * Wing1: peer of pivot with candidates {X, Z}
+ * Wing2: peer of pivot with candidates {Y, Z}
  *
- * Все клетки которые видят и Wing1, и Wing2 — не могут содержать Z.
+ * All cells that see both Wing1 and Wing2 cannot contain Z.
  *
  * @param {number[][]} grid
  * @param {Map<string, Set<number>>} candidateMap
- * @returns {number} Количество исключённых кандидатов
+ * @returns {number} Number of eliminated candidates
  */
 function xyWing(grid, candidateMap) {
   let eliminated = 0;
 
-  // Собираем все клетки с ровно 2 кандидатами
+  // Collect all bi-value cells
   const biValueCells = [];
   for (const [key, set] of candidateMap) {
     if (set.size === 2) {
@@ -749,22 +749,22 @@ function xyWing(grid, candidateMap) {
   for (const pivot of biValueCells) {
     const [x, y] = pivot.candidates;
 
-    // Ищем wing1 (пир pivot, кандидаты {X, Z}) и wing2 (пир pivot, кандидаты {Y, Z})
+    // Find wing1 (peer of pivot, candidates {X, Z}) and wing2 (peer of pivot, candidates {Y, Z})
     const pivotPeers = biValueCells.filter(cell =>
       cell !== pivot && arePeers(pivot.r, pivot.c, cell.r, cell.c)
     );
 
     for (const wing1 of pivotPeers) {
-      // wing1 должен содержать X и не содержать Y
+      // wing1 must contain X and not contain Y
       if (!wing1.candidates.includes(x) || wing1.candidates.includes(y)) continue;
       const z = wing1.candidates[0] === x ? wing1.candidates[1] : wing1.candidates[0];
 
       for (const wing2 of pivotPeers) {
         if (wing2 === wing1) continue;
-        // wing2 должен содержать Y и Z
+        // wing2 must contain Y and Z
         if (!wing2.candidates.includes(y) || !wing2.candidates.includes(z)) continue;
 
-        // Нашли XY-Wing. Убираем Z из клеток которые видят и wing1, и wing2
+        // XY-Wing found. Remove Z from cells that see both wing1 and wing2
         for (const [key, set] of candidateMap) {
           if (!set.has(z)) continue;
           const [r, c] = key.split(',').map(Number);
@@ -785,7 +785,7 @@ function xyWing(grid, candidateMap) {
 }
 
 /**
- * Проверяет являются ли две клетки пирами (в одной строке, колонке или блоке).
+ * Checks whether two cells are peers (in the same row, column, or block).
  *
  * @param {number} r1
  * @param {number} c1
@@ -795,32 +795,32 @@ function xyWing(grid, candidateMap) {
  */
 function arePeers(r1, c1, r2, c2) {
   if (r1 === r2 && c1 === c2) return false;
-  // Одна строка
+  // Same row
   if (r1 === r2) return true;
-  // Одна колонка
+  // Same column
   if (c1 === c2) return true;
-  // Один блок
+  // Same block
   if (Math.floor(r1 / 3) === Math.floor(r2 / 3) &&
       Math.floor(c1 / 3) === Math.floor(c2 / 3)) return true;
   return false;
 }
 
 /**
- * Unique Rectangle (Type 1) — использует условие уникальности решения.
+ * Unique Rectangle (Type 1) — uses the uniqueness constraint of the puzzle.
  *
- * Если 4 клетки образуют прямоугольник в двух блоках,
- * и 3 из них имеют одинаковые кандидаты {A, B},
- * а 4-я имеет {A, B, ...}, то A и B можно исключить из 4-й клетки.
- * (Иначе у пазла было бы два решения — deadly pattern.)
+ * If 4 cells form a rectangle spanning two blocks,
+ * and 3 of them share the same candidates {A, B},
+ * while the 4th has {A, B, ...}, then A and B can be removed from the 4th cell.
+ * (Otherwise the puzzle would have two solutions — a deadly pattern.)
  *
  * @param {number[][]} grid
  * @param {Map<string, Set<number>>} candidateMap
- * @returns {number} Количество исключённых кандидатов
+ * @returns {number} Number of eliminated candidates
  */
 function uniqueRectangle(grid, candidateMap) {
   let eliminated = 0;
 
-  // Собираем клетки с ровно 2 кандидатами
+  // Collect cells with exactly 2 candidates
   const biValueCells = [];
   for (const [key, set] of candidateMap) {
     if (set.size === 2) {
@@ -829,24 +829,24 @@ function uniqueRectangle(grid, candidateMap) {
     }
   }
 
-  // Ищем пары с одинаковыми кандидатами в одной строке
+  // Find pairs with identical candidates in the same row
   for (let i = 0; i < biValueCells.length; i++) {
     for (let j = i + 1; j < biValueCells.length; j++) {
       const a = biValueCells[i];
       const b = biValueCells[j];
 
       if (a.candidates[0] !== b.candidates[0] || a.candidates[1] !== b.candidates[1]) continue;
-      if (a.r !== b.r) continue; // Должны быть в одной строке
+      if (a.r !== b.r) continue; // Must be in the same row
 
-      // Колонки должны быть в разных блоках
+      // Columns must be in different blocks
       if (Math.floor(a.c / 3) === Math.floor(b.c / 3)) continue;
 
       const [val1, val2] = a.candidates;
 
-      // Ищем ещё две клетки: та же пара колонок, другая строка, тот же набор блоков
+      // Look for two more cells: same column pair, different row, same block range
       for (let r2 = 0; r2 < 9; r2++) {
         if (r2 === a.r) continue;
-        // Строки должны быть в разных блоках
+        // Rows must be in different blocks
         if (Math.floor(r2 / 3) === Math.floor(a.r / 3)) continue;
 
         const key1 = `${r2},${a.c}`;
@@ -858,8 +858,8 @@ function uniqueRectangle(grid, candidateMap) {
         if (!set1.has(val1) || !set1.has(val2)) continue;
         if (!set2.has(val1) || !set2.has(val2)) continue;
 
-        // Type 1: одна из нижних клеток имеет ровно {A, B}, другая имеет больше
-        // Из той что имеет больше — убираем A и B
+        // Type 1: one lower cell has exactly {A, B}, the other has more
+        // Remove A and B from the one with more candidates
         if (set1.size === 2 && set2.size > 2) {
           set2.delete(val1);
           set2.delete(val2);
@@ -877,13 +877,13 @@ function uniqueRectangle(grid, candidateMap) {
 }
 
 // ============================================================================
-// РЕШАТЕЛЬ — цикл техник от простой к сложной
+// SOLVER — technique loop from simple to advanced
 // ============================================================================
 
 /**
- * Техники в порядке применения.
- * name — для логирования и скоринга, fn — сама техника, weight — вес для скоринга.
- * type: 'place' ставит значения, 'eliminate' убирает кандидатов.
+ * Techniques in order of application.
+ * name — for logging and scoring, fn — the technique itself, weight — scoring weight.
+ * type: 'place' sets values, 'eliminate' removes candidates.
  */
 const TECHNIQUES = [
   { name: 'nakedSingle',      fn: nakedSingle,      weight: 1,  type: 'place' },
@@ -899,11 +899,11 @@ const TECHNIQUES = [
 ];
 
 /**
- * Решает пазл техниками от простой к сложной.
- * При первом прогрессе — начинает заново с простейшей.
- * Останавливается когда пазл решён или ни одна техника не даёт прогресса.
+ * Solves the puzzle using techniques from simple to advanced.
+ * On any progress — restarts from the simplest technique.
+ * Stops when the puzzle is solved or no technique makes progress.
  *
- * Мутирует переданную сетку.
+ * Mutates the input grid.
  *
  * @param {number[][]} grid - Сетка 9×9 (0 = пустая клетка)
  * @returns {{ solved: boolean, steps: Array<{technique: string, count: number}>, grid: number[][] }}
@@ -920,11 +920,11 @@ export function solve(grid) {
       if (count > 0) {
         steps.push({ technique: technique.name, count });
         progress = true;
-        break; // Начинаем заново с простейшей
+        break; // Restart from the simplest technique
       }
     }
 
-    // Ни одна техника не дала прогресса — стоп
+    // No technique made progress — stop
     if (!progress) break;
   }
 
@@ -936,25 +936,25 @@ export function solve(grid) {
 }
 
 // ============================================================================
-// ПРОВЕРКА УНИКАЛЬНОСТИ — backtracking-решатель
+// UNIQUENESS CHECK — backtracking solver
 // ============================================================================
 
 /**
- * Считает количество решений пазла через backtracking.
- * Останавливается как только нашёл второе решение — дальше считать не нужно.
+ * Counts the number of puzzle solutions via backtracking.
+ * Stops as soon as a second solution is found — no need to count further.
  *
- * @param {number[][]} grid - Сетка 9×9 (0 = пустая клетка). Не мутируется.
- * @returns {number} 0 (невалидный), 1 (уникальное), 2 (неоднозначный — 2+)
+ * @param {number[][]} grid - 9×9 grid (0 = empty cell). Not mutated.
+ * @returns {number} 0 (invalid), 1 (unique), 2 (ambiguous — 2+)
  */
 export function countSolutions(grid) {
-  // Работаем с копией
+  // Work on a copy
   const g = grid.map(row => [...row]);
   let count = 0;
 
   function backtrack(pos) {
-    if (count >= 2) return; // Досрочный выход
+    if (count >= 2) return; // Early exit
 
-    // Ищем следующую пустую клетку
+    // Find the next empty cell
     while (pos < 81 && g[Math.floor(pos / 9)][pos % 9] !== 0) {
       pos++;
     }
@@ -982,12 +982,12 @@ export function countSolutions(grid) {
 }
 
 // ============================================================================
-// СКОРИНГ СЛОЖНОСТИ
+// DIFFICULTY SCORING
 // ============================================================================
 
 /**
- * Диапазоны скоринга → уровни сложности.
- * Калибруются по результатам реальных тестов.
+ * Scoring ranges → difficulty levels.
+ * Calibrated based on real test results.
  */
 const DIFFICULTY_RANGES = {
   easy:   { min: 0,  max: 15 },
@@ -997,8 +997,8 @@ const DIFFICULTY_RANGES = {
 };
 
 /**
- * Считает скор сложности по шагам решения.
- * Скор = сумма (вес техники × количество применений).
+ * Calculates the difficulty score from the solving steps.
+ * Score = sum of (technique weight × number of applications).
  *
  * @param {Array<{technique: string, count: number}>} steps
  * @returns {number}
@@ -1015,7 +1015,7 @@ export function calculateScore(steps) {
 }
 
 /**
- * Определяет уровень сложности по скору.
+ * Determines the difficulty level from the score.
  *
  * @param {number} score
  * @returns {'easy' | 'medium' | 'hard' | 'expert'}
@@ -1028,18 +1028,18 @@ export function getDifficulty(score) {
 }
 
 // ============================================================================
-// УПРАВЛЯЕМОЕ УДАЛЕНИЕ КЛЕТОК
+// CONTROLLED CELL REMOVAL
 // ============================================================================
 
 /**
- * Генерирует пазл заданной сложности.
+ * Generates a puzzle of the specified difficulty.
  *
- * Алгоритм:
- * 1. Берёт полностью заполненную сетку (solution)
- * 2. Итеративно убирает по одной клетке
- * 3. После каждого удаления: проверка уникальности + прогон через решатель
- * 4. Если уникальность нарушена или сложность вышла за диапазон → откат
- * 5. Продолжает пока не достигнут целевой скоринг
+ * Algorithm:
+ * 1. Takes a fully filled grid (solution)
+ * 2. Iteratively removes one cell at a time
+ * 3. After each removal: uniqueness check + solver pass
+ * 4. If uniqueness is violated or difficulty exceeds the range — rollback
+ * 5. Continues until the target score range is reached
  *
  * @param {number[][]} solution - Полностью заполненная валидная сетка
  * @param {'easy' | 'medium' | 'hard' | 'expert'} targetDifficulty
@@ -1052,14 +1052,14 @@ export function generatePuzzle(solution, targetDifficulty, options = {}) {
   const range = DIFFICULTY_RANGES[targetDifficulty];
   const grid = solution.map(row => [...row]);
 
-  // Все позиции, перемешанные случайно
+  // All positions, randomly shuffled
   const positions = [];
   for (let r = 0; r < 9; r++) {
     for (let c = 0; c < 9; c++) positions.push([r, c]);
   }
   shuffle(positions);
 
-  const locked = new Set(); // Клетки которые нельзя удалять
+  const locked = new Set(); // Cells that cannot be removed
   let bestResult = null;
 
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
@@ -1074,19 +1074,19 @@ export function generatePuzzle(solution, targetDifficulty, options = {}) {
       const backup = grid[r][c];
       grid[r][c] = 0;
 
-      // Проверка уникальности
+      // Uniqueness check
       if (countSolutions(grid) !== 1) {
         grid[r][c] = backup;
         locked.add(key);
         continue;
       }
 
-      // Прогон через решатель
+      // Solver pass
       const testGrid = grid.map(row => [...row]);
       const result = solve(testGrid);
 
       if (!result.solved) {
-        // Решатель не справился — слишком сложно для текущих техник
+        // Solver failed — too complex for current techniques
         grid[r][c] = backup;
         locked.add(key);
         continue;
@@ -1095,7 +1095,7 @@ export function generatePuzzle(solution, targetDifficulty, options = {}) {
       const score = calculateScore(result.steps);
       const difficulty = getDifficulty(score);
 
-      // Сохраняем лучший результат в целевом диапазоне
+      // Save the best result within the target range
       if (score >= range.min && score <= range.max) {
         bestResult = {
           puzzle: grid.map(row => [...row]),
@@ -1106,7 +1106,7 @@ export function generatePuzzle(solution, targetDifficulty, options = {}) {
         };
       }
 
-      // Перестреляли — скор выше целевого диапазона → откат
+      // Overshot — score exceeds the target range — rollback
       if (score > range.max) {
         grid[r][c] = backup;
         locked.add(key);
@@ -1117,11 +1117,11 @@ export function generatePuzzle(solution, targetDifficulty, options = {}) {
       break;
     }
 
-    // Ничего не удалось удалить — выход
+    // Nothing could be removed — exit
     if (!found) break;
   }
 
-  // Если не нашли идеальный — берём текущее состояние
+  // If no ideal result found — use the current state
   if (!bestResult) {
     const testGrid = grid.map(row => [...row]);
     const result = solve(testGrid);
