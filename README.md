@@ -1,14 +1,15 @@
 # Sudoku Generator
 
-A lightweight Sudoku puzzle generator that creates complete solutions and playable puzzles using a backtracking algorithm. Works in browser and Node.js environments.
+A lightweight Sudoku puzzle generator that creates complete solutions and playable puzzles with controlled difficulty. Works in browser and Node.js environments.
 
 [![npm version](https://img.shields.io/npm/v/@luckyfoxdesign/sudoku-generator)](https://www.npmjs.com/package/@luckyfoxdesign/sudoku-generator) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## Features
 
 - 🎲 Generates randomized, valid Sudoku puzzles and solutions
-- 🧩 Creates playable puzzles with ~50% cells removed
-- ⚡ Fast generation using backtracking algorithm
+- 🎯 Difficulty-based generation: easy, medium, hard, expert
+- 🧩 Creates playable puzzles with controlled cell removal
+- ⚡ Fast generation using backtracking + constraint solving
 - 🌐 Works in browser and Node.js
 - 📦 Zero dependencies
 - 🔧 Multiple export formats (ESM, CommonJS, IIFE)
@@ -23,21 +24,18 @@ npm install @luckyfoxdesign/sudoku-generator
 ## Quick Start
 
 ```javascript
-import { generateSudokuGrid, generateCompleteSudokuGrid } from '@luckyfoxdesign/sudoku-generator';
+import { generateSudoku, generateSudokuGrid, generateCompleteSudokuGrid } from '@luckyfoxdesign/sudoku-generator';
 
-// Generate a puzzle (with empty cells marked as 0)
-const puzzle = generateSudokuGrid();
-console.log(puzzle);
-// [[5, 0, 4, 6, 0, 8, 9, 0, 2],
-//  [6, 7, 0, 1, 9, 0, 3, 4, 0],
-//  ...]
+// Generate a puzzle with controlled difficulty
+const { puzzle, solution, difficulty, score } = generateSudoku('hard');
+console.log(difficulty); // 'hard'
+console.log(score);      // 41-80
+// puzzle: [[5, 0, 0, 6, 0, 0, 9, 0, 2], ...]  — zeros are empty cells
+// solution: [[5, 3, 4, 6, 7, 8, 9, 1, 2], ...] — complete grid
 
-// Generate a complete solution (all cells filled)
-const solution = generateCompleteSudokuGrid();
-console.log(solution);
-// [[5, 3, 4, 6, 7, 8, 9, 1, 2],
-//  [6, 7, 2, 1, 9, 5, 3, 4, 8],
-//  ...]
+// Or generate a simple puzzle (legacy API)
+const simplePuzzle = generateSudokuGrid();
+// [[5, 0, 4, 6, 0, 8, 9, 0, 2], ...]
 ```
 
 ## Usage
@@ -53,13 +51,12 @@ console.log(solution);
 <body>
   <script src="https://unpkg.com/@luckyfoxdesign/sudoku-generator/dist/index.global.js"></script>
   <script>
-    // Generate a puzzle
-    const puzzle = Sudoku.generateSudokuGrid();
-    console.log(puzzle);
-    
-    // Generate a complete solution
-    const solution = Sudoku.generateCompleteSudokuGrid();
-    console.log(solution);
+    // Generate a puzzle with difficulty
+    const { puzzle, solution, difficulty } = Sudoku.generateSudoku('medium');
+    console.log(difficulty); // 'medium'
+
+    // Legacy API still works
+    const simplePuzzle = Sudoku.generateSudokuGrid();
   </script>
 </body>
 </html>
@@ -68,14 +65,14 @@ console.log(solution);
 ### React / Vue / Svelte
 
 ```javascript
-import { generateSudokuGrid } from '@luckyfoxdesign/sudoku-generator';
+import { generateSudoku } from '@luckyfoxdesign/sudoku-generator';
 
 function SudokuGame() {
-  const [grid, setGrid] = useState(generateSudokuGrid());
-  
+  const [{ puzzle, solution }] = useState(() => generateSudoku('medium'));
+
   return (
     <div>
-      {grid.map((row, i) => (
+      {puzzle.map((row, i) => (
         <div key={i}>
           {row.map((cell, j) => (
             <span key={j}>
@@ -92,22 +89,47 @@ function SudokuGame() {
 ### Node.js (ESM)
 
 ```javascript
-import { generateSudokuGrid, generateCompleteSudokuGrid } from '@luckyfoxdesign/sudoku-generator';
+import { generateSudoku, generateSudokuGrid, generateCompleteSudokuGrid } from '@luckyfoxdesign/sudoku-generator';
 
-const puzzle = generateSudokuGrid();
-const solution = generateCompleteSudokuGrid();
+const { puzzle, solution, difficulty, score } = generateSudoku('expert');
 ```
 
 ### Node.js (CommonJS)
 
 ```javascript
-const { generateSudokuGrid, generateCompleteSudokuGrid } = require('@luckyfoxdesign/sudoku-generator');
+const { generateSudoku, generateSudokuGrid, generateCompleteSudokuGrid } = require('@luckyfoxdesign/sudoku-generator');
 
-const puzzle = generateSudokuGrid();
-const solution = generateCompleteSudokuGrid();
+const { puzzle, solution, difficulty, score } = generateSudoku('hard');
 ```
 
 ## API
+
+### `generateSudoku(difficulty?)`
+
+Generates a Sudoku puzzle with controlled difficulty. Returns both the puzzle and solution together.
+
+**Parameters:**
+- `difficulty` — `'easy' | 'medium' | 'hard' | 'expert'` (default: `'easy'`)
+
+**Returns:** `{ puzzle: number[][], solution: number[][], difficulty: string, score: number }`
+
+| Difficulty | Score range | Description |
+|------------|-------------|-------------|
+| `easy`     | 0–15        | Solved by naked singles only |
+| `medium`   | 16–40       | Requires hidden singles |
+| `hard`     | 41–80       | Requires more advanced techniques |
+| `expert`   | 81+         | Requires complex constraint solving |
+
+**Example:**
+```javascript
+const { puzzle, solution, difficulty, score } = generateSudoku('hard');
+console.log(difficulty); // 'hard'
+console.log(score);      // e.g. 57
+console.log(puzzle[0]);  // [5, 0, 0, 6, 0, 0, 9, 0, 2]
+console.log(solution[0]); // [5, 3, 4, 6, 7, 8, 9, 1, 2]
+```
+
+---
 
 ### `generateSudokuGrid()`
 
@@ -159,12 +181,21 @@ console.log(grid[0][0].removedValues);  // [2, 7]
 
 ## Puzzle Generation Details
 
-### Cell Removal Strategy
+### Difficulty-based generation (`generateSudoku`)
 
-When generating puzzles:
+Puzzles are generated by iteratively removing cells and scoring the result using a constraint-solving engine. The score is determined by the techniques required to solve the puzzle:
+
+- **Naked singles** — only one candidate in a cell (low weight)
+- **Hidden singles** — only one cell in a unit can hold a value (medium weight)
+- **More advanced techniques** — pointing pairs, naked/hidden subsets, etc. (higher weights)
+
+Cells are removed until the puzzle's score falls within the target difficulty range. If the target cannot be reached within a time limit, the closest available result is returned.
+
+### Legacy cell removal strategy (`generateSudokuGrid`)
+
+When generating puzzles with the legacy API:
 - **~50% of cells** are randomly removed
 - **Columns 0, 3, and 6** (first column of each 3×3 block) are **never removed**
-- This ensures structural integrity and solvability
 
 ### Example Grid Structure
 
@@ -211,6 +242,7 @@ npm test
 
 Tests cover:
 - ✅ Puzzle generation (with empty cells)
+- ✅ Difficulty-based generation (all 4 levels)
 - ✅ Complete solution generation (no empty cells)
 - ✅ Grid structure validation
 - ✅ Sudoku rules (rows, columns, 3×3 blocks)
@@ -275,23 +307,21 @@ Check the package:
 
 ### Generation Algorithm
 
-The generator uses a **backtracking algorithm** to fill the grid:
-
 1. **Generate Complete Solution:**
-   - Start with an empty 9×9 grid
-   - For each cell (left to right, top to bottom):
-     - Try a random number from 1-9
-     - Check if it's valid (no duplicates in row, column, or 3×3 block)
-     - If valid, move to next cell
-     - If no valid number exists, backtrack to previous cell
-   - Repeat until the entire grid is filled
+   - Uses a backtracking algorithm on an empty 9×9 grid
+   - Tries random numbers 1–9 per cell; backtracks on conflicts
+   - Produces a guaranteed valid, fully filled solution
 
-2. **Create Puzzle (optional):**
-   - Remove approximately 50% of cells randomly
-   - Preserve columns 0, 3, and 6 for structure
-   - Empty cells are marked as 0
+2. **Create Puzzle:**
+   - **`generateSudoku(difficulty)`** — removes cells one by one, scores the result using a constraint solver, and stops when the score hits the target range
+   - **`generateSudokuGrid()`** — removes ~50% of cells randomly, preserving columns 0, 3, and 6
 
-This ensures every generated grid is a complete, valid Sudoku solution, and every puzzle is solvable.
+3. **Difficulty Scoring:**
+   - The solver applies human-like techniques (naked singles, hidden singles, pointing pairs, etc.)
+   - Each technique has a weight; score = sum of (weight × applications)
+   - Score determines difficulty: easy (0–15), medium (16–40), hard (41–80), expert (81+)
+
+Every generated puzzle has a unique solution.
 
 ## Performance
 
@@ -311,19 +341,20 @@ This ensures every generated grid is a complete, valid Sudoku solution, and ever
 
 ### Game Development
 ```javascript
-import { generateSudokuGrid, generateCompleteSudokuGrid } from '@luckyfoxdesign/sudoku-generator';
+import { generateSudoku } from '@luckyfoxdesign/sudoku-generator';
 
-const puzzle = generateSudokuGrid();        // For player to solve
-const solution = generateCompleteSudokuGrid(); // For validation
+// Puzzle and solution in one call, matched by difficulty
+const { puzzle, solution, difficulty } = generateSudoku('medium');
+// Use puzzle for the board, solution for validation
 ```
 
 ### Puzzle Books / Print
 ```javascript
-import { generateCompleteSudokuGrid } from '@luckyfoxdesign/sudoku-generator';
+import { generateSudoku } from '@luckyfoxdesign/sudoku-generator';
 
-// Generate 100 unique puzzles
+// Generate 100 hard puzzles
 for (let i = 0; i < 100; i++) {
-  const puzzle = generateSudokuGrid();
+  const { puzzle } = generateSudoku('hard');
   printPuzzle(puzzle);
 }
 ```

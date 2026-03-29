@@ -9,10 +9,11 @@
 
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
-import { 
-  generateSudokuGrid, 
+import {
+  generateSudokuGrid,
   generateCompleteSudokuGrid,
-  generateSudokuGridWithMetadata 
+  generateSudokuGridWithMetadata,
+  generateSudoku,
 } from '../src/index.js';
 
 // ============================================================================
@@ -438,5 +439,76 @@ describe('Edge Cases', () => {
       5,
       'All generated solutions should be unique'
     );
+  });
+});
+
+// ============================================================================
+// generateSudoku() — ГЕНЕРАЦИЯ ПО УРОВНЮ СЛОЖНОСТИ
+// ============================================================================
+
+describe('generateSudoku() - Difficulty-based generation', () => {
+
+  test('should return puzzle, solution, difficulty and score', () => {
+    const result = generateSudoku();
+
+    assert.ok(result.puzzle, 'Should have puzzle');
+    assert.ok(result.solution, 'Should have solution');
+    assert.ok(typeof result.difficulty === 'string', 'Should have difficulty string');
+    assert.ok(typeof result.score === 'number', 'Should have numeric score');
+
+    // Puzzle 9×9
+    assert.equal(result.puzzle.length, 9);
+    result.puzzle.forEach(row => assert.equal(row.length, 9));
+
+    // Solution 9×9, no zeros
+    assert.equal(result.solution.length, 9);
+    result.solution.forEach(row => {
+      assert.equal(row.length, 9);
+      row.forEach(cell => assert.ok(cell >= 1 && cell <= 9));
+    });
+  });
+
+  test('should default to easy difficulty', () => {
+    const result = generateSudoku();
+    assert.equal(result.difficulty, 'easy');
+  });
+
+  test('should generate valid puzzles for all difficulty levels', () => {
+    for (const diff of ['easy', 'medium', 'hard', 'expert']) {
+      const result = generateSudoku(diff);
+
+      // Пазл имеет пустые клетки
+      let emptyCells = 0;
+      for (const row of result.puzzle) {
+        for (const cell of row) {
+          if (cell === 0) emptyCells++;
+        }
+      }
+      assert.ok(emptyCells > 0, `${diff} puzzle should have empty cells`);
+
+      // Заполненные клетки совпадают с решением
+      for (let r = 0; r < 9; r++) {
+        for (let c = 0; c < 9; c++) {
+          if (result.puzzle[r][c] !== 0) {
+            assert.equal(result.puzzle[r][c], result.solution[r][c],
+              `${diff}: cell [${r}][${c}] should match solution`);
+          }
+        }
+      }
+    }
+  });
+
+  test('old API still works alongside new API', () => {
+    // Старый API
+    const oldGrid = generateSudokuGrid();
+    assert.equal(oldGrid.length, 9);
+
+    const oldSolution = generateCompleteSudokuGrid();
+    assert.equal(oldSolution.length, 9);
+
+    // Новый API
+    const result = generateSudoku('medium');
+    assert.equal(result.puzzle.length, 9);
+    assert.ok(result.score > 0);
   });
 });

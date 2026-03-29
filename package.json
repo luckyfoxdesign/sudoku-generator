@@ -1,7 +1,7 @@
 {
   "name": "@luckyfoxdesign/sudoku-generator",
-  "version": "1.0.4",
-  "description": "A lightweight Sudoku puzzle generator that creates randomized 9×9 grids using a backtracking algorithm. Generates complete, valid Sudoku boards suitable for games and puzzle applications.",
+  "version": "1.1.0",
+  "description": "A lightweight Sudoku puzzle generator with difficulty control (easy–expert). Generates complete solutions and playable puzzles using backtracking and constraint-solving techniques.",
   "keywords": [
     "sudoku",
     "puzzle",

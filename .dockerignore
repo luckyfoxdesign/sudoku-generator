@@ -15,3 +15,5 @@ LICENSE
 Dockerfile
 compose.yml
 .dockerignore
+docs/
+.claude/

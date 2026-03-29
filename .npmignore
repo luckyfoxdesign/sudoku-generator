@@ -18,3 +18,5 @@ test.html
 
 # Tests
 test/
+docs/
+.claude/

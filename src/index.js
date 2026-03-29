@@ -7,6 +7,8 @@
  * @see https://github.com/luckyfoxdesign/sudoku-generator
  */
 
+import { generatePuzzle, solve, calculateScore, getDifficulty } from './solver.js';
+
 // ============================================================================
 // PUBLIC API
 // ============================================================================
@@ -25,6 +27,29 @@
 export function generateSudokuGrid() {
   const fullGrid = generateSudokuGridWithMetadata();
   return fullGrid.map((row) => row.map((cell) => cell.chosenValue));
+}
+
+/**
+ * Generates a Sudoku puzzle with controlled difficulty.
+ * Returns puzzle, solution, difficulty level, score, and solving steps.
+ *
+ * @param {'easy' | 'medium' | 'hard' | 'expert'} [difficulty='easy'] - Target difficulty
+ * @returns {{ puzzle: number[][], solution: number[][], difficulty: string, score: number }}
+ *
+ * @example
+ * const { puzzle, solution, difficulty, score } = generateSudoku('hard');
+ * console.log(difficulty); // 'hard'
+ * console.log(score);      // 41-80
+ */
+export function generateSudoku(difficulty = 'easy') {
+  const solution = generateCompleteSudokuGrid();
+  const result = generatePuzzle(solution, difficulty);
+  return {
+    puzzle: result.puzzle,
+    solution: result.solution,
+    difficulty: result.difficulty,
+    score: result.score,
+  };
 }
 
 /**
