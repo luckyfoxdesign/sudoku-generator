@@ -6,6 +6,7 @@ const entry = "src/index.js";
 await build({
   entryPoints: [entry],
   outfile: "dist/index.js",
+  bundle: true,
   format: "esm",
   platform: "neutral",
   minify: true,
@@ -16,6 +17,7 @@ await build({
 await build({
   entryPoints: [entry],
   outfile: "dist/index.cjs",
+  bundle: true,
   format: "cjs",
   platform: "node",
   minify: true,
